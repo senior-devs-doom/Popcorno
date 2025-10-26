@@ -1,18 +1,57 @@
-
-html, body {
-  overflow-x: hidden;
+body {
+  margin: 0;
+  font-family: "Poppins", "Segoe UI", Arial, sans-serif;
+  background: #000;
+  color: #fff;
 }
 
+button, .MuiButton-root {
+  transition: all 0.15s ease;
+}
 
-@media (max-width: 480px) {
-  button {
-    padding-left: 0.9rem !important;
-    padding-right: 0.9rem !important;
+.MuiButton-root:hover {
+  transform: scale(1.04);
+}
+
+.MuiCard-root {
+  transition: all 0.2s ease;
+}
+
+.MuiCard-root:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(255, 153, 0, 0.2);
+}
+
+.MuiChip-root {
+  transition: all 0.2s ease;
+}
+
+.MuiChip-root:hover {
+  transform: scale(1.06);
+}
+
+img {
+  user-select: none;
+}
+
+@media (max-width: 600px) {
+  h2, .MuiTypography-h2 {
+    font-size: 1.6rem !important;
   }
-}
-
-
-img, iframe {
-  max-width: 100%;
-  height: auto;
+  h3, .MuiTypography-h3 {
+    font-size: 1.3rem !important;
+  }
+  .MuiCardContent-root {
+    padding: 12px !important;
+  }
+  .MuiCard-root img {
+    height: 280px !important;
+  }
+  .MuiButton-root {
+    font-size: 0.8rem !important;
+    padding: 4px 10px !important;
+  }
+  .MuiChip-root {
+    font-size: 0.75rem !important;
+  }
 }

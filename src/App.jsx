@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CssVarsProvider, extendTheme } from "@mui/joy/styles";
 import Sheet from "@mui/joy/Sheet";
 import Typography from "@mui/joy/Typography";
@@ -16,12 +16,26 @@ const theme = extendTheme({
       },
     },
   },
-  fontFamily: { body: "Poppins, Segoe UI, Inter, system-ui, Avenir, Helvetica, Arial, sans-serif" },
-  components: { JoyButton: { styleOverrides: { root: { borderRadius: 999 } } } },
 });
+
+const API_KEY = "f933cff296149f7459a50c0384cada32";
 
 export default function App() {
   const [screen, setScreen] = useState("home");
+  const [genres, setGenres] = useState([]);
+
+  // pobranie gatunków
+  useEffect(() => {
+    fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${API_KEY}&language=pl-PL`)
+      .then((r) => r.json())
+      .then((data) => {
+        console.log("gatunki z TMDb:", data.genres); // sprawdzam czy działa xd
+        setGenres(data.genres || []);
+      })
+      .catch((err) => {
+        console.error("coś nie pykło z TMDb", err);
+      });
+  }, []);
 
   return (
     <CssVarsProvider theme={theme}>
@@ -34,7 +48,7 @@ export default function App() {
           flexDirection: "column",
         }}
       >
-        {/* HEADER */}
+        {/* góra */}
         <Box
           sx={{
             width: "100%",
@@ -43,113 +57,73 @@ export default function App() {
             px: { xs: 2, sm: 3 },
             py: { xs: 2, sm: 3 },
             display: "flex",
-            alignItems: "center",
             justifyContent: "space-between",
-            gap: 2,
+            alignItems: "center",
             flexWrap: "wrap",
           }}
         >
-          <Typography
-            level="h3"
-            sx={{
-              fontWeight: 800,
-              color: "#ff9900",
-              letterSpacing: -0.5,
-              fontSize: { xs: "1.6rem", sm: "2rem" },
-            }}
-          >
+          <Typography level="h3" sx={{ color: "#ff9900", fontWeight: 800 }}>
             🍿 Popcorno
           </Typography>
-
-          <Box
-            sx={{
-              display: "flex",
-              gap: 1,
-              flexWrap: "wrap",
-              width: { xs: "100%", sm: "auto" },
-              justifyContent: { xs: "flex-start", sm: "flex-end" },
-            }}
-          >
-            <Button variant={screen === "home" ? "solid" : "plain"} color="primary" size="sm" onClick={() => setScreen("home")}>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+            <Button
+              size="sm"
+              variant={screen === "home" ? "solid" : "plain"}
+              color="primary"
+              onClick={() => setScreen("home")}
+            >
               Start
             </Button>
-            <Button variant={screen === "database" ? "solid" : "plain"} color="primary" size="sm" onClick={() => setScreen("database")}>
-              Katalog
-            </Button>
-            <Button variant={screen === "likes" ? "solid" : "plain"} color="primary" size="sm" onClick={() => setScreen("likes")}>
-              Ulubione
+            <Button
+              size="sm"
+              variant={screen === "genres" ? "solid" : "plain"}
+              color="primary"
+              onClick={() => setScreen("genres")}
+            >
+              Gatunki
             </Button>
           </Box>
         </Box>
 
-        {/* MAIN */}
+        {/* główna część */}
         <Box
           sx={{
             flex: 1,
-            width: "100%",
-            maxWidth: 1100,
-            mx: "auto",
-            px: { xs: 2, sm: 3 },
-            pb: { xs: 4, sm: 6 },
             display: "grid",
             placeItems: "center",
-          }}
-        >
-          {screen === "home" && (
-            <Box sx={{ textAlign: "center", maxWidth: 720, width: "100%", px: { xs: 1, sm: 0 } }}>
-              <Typography
-                level="h2"
-                sx={{ color: "#ff9900", fontWeight: 700, fontSize: { xs: "1.8rem", sm: "2.2rem" } }}
-              >
-                Witaj w Popcorno!
-              </Typography>
-              <Typography level="body1" sx={{ mt: 1.5, opacity: 0.85, fontSize: { xs: 14, sm: 16 } }}>
-                To będzie Twoja baza filmowych inspiracji 🍿
-              </Typography>
-              <Button sx={{ mt: 3 }} size="md" color="primary" onClick={() => setScreen("database")}>
-                Zaczynamy 🎬
-              </Button>
-            </Box>
-          )}
-
-          {screen === "database" && (
-            <Box sx={{ textAlign: "center", maxWidth: 720, width: "100%" }}>
-              <Typography level="h2" sx={{ color: "#ff9900", fontWeight: 700, fontSize: { xs: "1.8rem", sm: "2.2rem" } }}>
-                Katalog filmów
-              </Typography>
-              <Typography level="body1" sx={{ mt: 1.5, opacity: 0.85, fontSize: { xs: 14, sm: 16 } }}>
-                Tu wkrótce podłączymy TMDb.
-              </Typography>
-            </Box>
-          )}
-
-          {screen === "likes" && (
-            <Box sx={{ textAlign: "center", maxWidth: 720, width: "100%" }}>
-              <Typography level="h2" sx={{ color: "#ff9900", fontWeight: 700, fontSize: { xs: "1.8rem", sm: "2.2rem" } }}>
-                Ulubione
-              </Typography>
-              <Typography level="body1" sx={{ mt: 1.5, opacity: 0.85, fontSize: { xs: 14, sm: 16 } }}>
-                Twoje zapisane typy pojawią się tutaj ❤️
-              </Typography>
-            </Box>
-          )}
-        </Box>
-
-        {/* FOOTER */}
-        <Box
-          component="footer"
-          sx={{
-            width: "100%",
-            maxWidth: 1100,
-            mx: "auto",
-            px: { xs: 2, sm: 3 },
-            py: 2,
-            opacity: 0.6,
-            fontSize: 12,
+            px: 2,
             textAlign: "center",
           }}
         >
-          © {new Date().getFullYear()} Popcorno
+          {screen === "home" && (
+            <>
+              <Typography level="h2" sx={{ color: "#ff9900", fontWeight: 700 }}>
+                Witaj w Popcorno!
+              </Typography>
+              <Typography sx={{ mt: 2, opacity: 0.8 }}>
+                Tu będzie wybór filmów i inne bajery 🎬
+              </Typography>
+            </>
+          )}
+
+          {screen === "genres" && (
+            <Box sx={{ width: "100%", maxWidth: 600 }}>
+              <Typography level="h3" sx={{ mb: 2, color: "#ff9900" }}>
+                Gatunki z TMDb (testowo)
+              </Typography>
+              {genres.length === 0 ? (
+                <Typography sx={{ opacity: 0.7 }}>ładowanie...</Typography>
+              ) : (
+                <ul style={{ listStyle: "none", padding: 0 }}>
+                  {genres.map((g) => (
+                    <li key={g.id} style={{ marginBottom: 6 }}>
+                      🎞️ {g.name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Box>
+          )}
         </Box>
       </Sheet>
     </CssVarsProvider>

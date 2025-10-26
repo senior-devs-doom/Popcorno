@@ -32,19 +32,9 @@ const PROVIDERS = [
 
 export default function App() {
   const [screen, setScreen] = useState("home");
-
-  // gatunki
   const [genres, setGenres] = useState([]);
-  const [selected, setSelected] = useState(() => {
-    const saved = localStorage.getItem("selectedGenres");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // platformy
-  const [pickedProviders, setPickedProviders] = useState(() => {
-    const saved = localStorage.getItem("selectedProviders");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [selected, setSelected] = useState(() => JSON.parse(localStorage.getItem("selectedGenres") || "[]"));
+  const [pickedProviders, setPickedProviders] = useState(() => JSON.parse(localStorage.getItem("selectedProviders") || "[]"));
 
   useEffect(() => {
     fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${API_KEY}&language=pl-PL`)
@@ -99,29 +89,17 @@ export default function App() {
             🍿 Popcorno
           </Typography>
           <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-            <Button
-              size="sm"
-              variant={screen === "home" ? "solid" : "plain"}
-              color="primary"
-              onClick={() => setScreen("home")}
-            >
+            <Button size="sm" variant={screen === "home" ? "solid" : "plain"} onClick={() => setScreen("home")}>
               Start
             </Button>
-            <Button
-              size="sm"
-              variant={screen === "genres" ? "solid" : "plain"}
-              color="primary"
-              onClick={() => setScreen("genres")}
-            >
+            <Button size="sm" variant={screen === "genres" ? "solid" : "plain"} onClick={() => setScreen("genres")}>
               Gatunki
             </Button>
-            <Button
-              size="sm"
-              variant={screen === "providers" ? "solid" : "plain"}
-              color="primary"
-              onClick={() => setScreen("providers")}
-            >
+            <Button size="sm" variant={screen === "providers" ? "solid" : "plain"} onClick={() => setScreen("providers")}>
               Platformy
+            </Button>
+            <Button size="sm" variant={screen === "game" ? "solid" : "plain"} onClick={() => setScreen("game")}>
+              Gra
             </Button>
           </Box>
         </Box>
@@ -146,10 +124,13 @@ export default function App() {
               </Typography>
               <Box sx={{ mt: 3, display: "flex", gap: 1, justifyContent: "center", flexWrap: "wrap" }}>
                 <Button color="primary" onClick={() => setScreen("genres")}>
-                  Wybierz gatunki
+                  Gatunki
                 </Button>
-                <Button color="primary" variant="outlined" onClick={() => setScreen("providers")}>
-                  Wybierz platformy
+                <Button color="primary" onClick={() => setScreen("providers")}>
+                  Platformy
+                </Button>
+                <Button color="primary" variant="solid" onClick={() => setScreen("game")}>
+                  Start gry 🎬
                 </Button>
               </Box>
             </Box>
@@ -160,11 +141,10 @@ export default function App() {
               <Typography level="h3" sx={{ mb: 2, color: "#ff9900" }}>
                 Wybierz gatunki
               </Typography>
-
               {genres.length === 0 ? (
                 <Typography sx={{ opacity: 0.7 }}>ładowanie...</Typography>
               ) : (
-                <Box sx={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
                   {genres.map((g) => (
                     <Checkbox
                       key={g.id}
@@ -176,16 +156,12 @@ export default function App() {
                   ))}
                 </Box>
               )}
-
               <Box sx={{ mt: 3, display: "flex", gap: 1, flexWrap: "wrap" }}>
                 <Button color="primary" onClick={() => setScreen("home")}>
                   Zapisz i wróć
                 </Button>
-                <Button
-                  variant="plain"
-                  onClick={() => setSelected([])}
-                >
-                  wyczyść gatunki
+                <Button variant="plain" onClick={() => setSelected([])}>
+                  wyczyść
                 </Button>
               </Box>
             </Box>
@@ -196,14 +172,7 @@ export default function App() {
               <Typography level="h3" sx={{ mb: 2, color: "#ff9900" }}>
                 Gdzie oglądasz
               </Typography>
-
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "repeat(2,1fr)", sm: "repeat(3,1fr)" },
-                  gap: 8,
-                }}
-              >
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2,1fr)", sm: "repeat(3,1fr)" }, gap: 8 }}>
                 {PROVIDERS.map((p) => {
                   const active = pickedProviders.includes(p.id);
                   return (
@@ -218,20 +187,44 @@ export default function App() {
                   );
                 })}
               </Box>
-
               <Box sx={{ mt: 3, display: "flex", gap: 1, flexWrap: "wrap" }}>
                 <Button color="primary" onClick={() => setScreen("home")}>
                   Zapisz i wróć
                 </Button>
                 <Button variant="plain" onClick={() => setPickedProviders([])}>
-                  wyczyść platformy
+                  wyczyść
                 </Button>
               </Box>
             </Box>
           )}
+
+          {screen === "game" && (
+            <Box sx={{ maxWidth: 700, textAlign: "center" }}>
+              <Typography level="h2" sx={{ color: "#ff9900", fontWeight: 700 }}>
+                🎬 Tryb gry
+              </Typography>
+              <Typography sx={{ mt: 2, opacity: 0.8 }}>
+                Gatunki:{" "}
+                {selected.length
+                  ? selected.map((id) => genres.find((g) => g.id === id)?.name).join(", ")
+                  : "nic nie wybrałeś xd"}
+              </Typography>
+              <Typography sx={{ mt: 1, opacity: 0.8 }}>
+                Platformy:{" "}
+                {pickedProviders.length
+                  ? pickedProviders
+                      .map((id) => PROVIDERS.find((p) => p.id === id)?.name)
+                      .join(", ")
+                  : "brak"}
+              </Typography>
+
+              <Button sx={{ mt: 3 }} color="primary" size="lg">
+                Losuj film 🍿
+              </Button>
+            </Box>
+          )}
         </Box>
 
-        {/* dół */}
         <Box
           component="footer"
           sx={{

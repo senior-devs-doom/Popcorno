@@ -4,6 +4,7 @@ import Sheet from "@mui/joy/Sheet";
 import Typography from "@mui/joy/Typography";
 import Button from "@mui/joy/Button";
 import Box from "@mui/joy/Box";
+import Checkbox from "@mui/joy/Checkbox";
 import "./App.css";
 
 const theme = extendTheme({
@@ -23,19 +24,29 @@ const API_KEY = "f933cff296149f7459a50c0384cada32";
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [genres, setGenres] = useState([]);
+  const [selected, setSelected] = useState(() => {
+    const saved = localStorage.getItem("selectedGenres");
+    return saved ? JSON.parse(saved) : [];
+  });
 
-  // pobranie gatunków
   useEffect(() => {
     fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${API_KEY}&language=pl-PL`)
       .then((r) => r.json())
       .then((data) => {
-        console.log("gatunki z TMDb:", data.genres); // sprawdzam czy działa xd
         setGenres(data.genres || []);
       })
-      .catch((err) => {
-        console.error("coś nie pykło z TMDb", err);
-      });
+      .catch(() => console.log("nie działa tmdb :("));
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("selectedGenres", JSON.stringify(selected));
+  }, [selected]);
+
+  const toggleGenre = (id) => {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
 
   return (
     <CssVarsProvider theme={theme}>
@@ -48,7 +59,6 @@ export default function App() {
           flexDirection: "column",
         }}
       >
-        {/* góra */}
         <Box
           sx={{
             width: "100%",
@@ -85,7 +95,6 @@ export default function App() {
           </Box>
         </Box>
 
-        {/* główna część */}
         <Box
           sx={{
             flex: 1,
@@ -101,27 +110,41 @@ export default function App() {
                 Witaj w Popcorno!
               </Typography>
               <Typography sx={{ mt: 2, opacity: 0.8 }}>
-                Tu będzie wybór filmów i inne bajery 🎬
+                Tu wybierzesz gatunki i zrobisz swój filmowy profil 🍿
               </Typography>
+              <Button sx={{ mt: 3 }} color="primary" onClick={() => setScreen("genres")}>
+                Wybierz gatunki
+              </Button>
             </>
           )}
 
           {screen === "genres" && (
-            <Box sx={{ width: "100%", maxWidth: 600 }}>
+            <Box sx={{ width: "100%", maxWidth: 600, textAlign: "left" }}>
               <Typography level="h3" sx={{ mb: 2, color: "#ff9900" }}>
-                Gatunki z TMDb (testowo)
+                Wybierz gatunki, które lubisz
               </Typography>
+
               {genres.length === 0 ? (
                 <Typography sx={{ opacity: 0.7 }}>ładowanie...</Typography>
               ) : (
-                <ul style={{ listStyle: "none", padding: 0 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
                   {genres.map((g) => (
-                    <li key={g.id} style={{ marginBottom: 6 }}>
-                      🎞️ {g.name}
-                    </li>
+                    <Checkbox
+                      key={g.id}
+                      label={g.name}
+                      color="primary"
+                      checked={selected.includes(g.id)}
+                      onChange={() => toggleGenre(g.id)}
+                    />
                   ))}
-                </ul>
+                </Box>
               )}
+
+              <Box sx={{ mt: 3 }}>
+                <Button color="primary" onClick={() => setScreen("home")}>
+                  Zapisz i wróć
+                </Button>
+              </Box>
             </Box>
           )}
         </Box>

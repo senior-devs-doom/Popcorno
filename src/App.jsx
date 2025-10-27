@@ -21,10 +21,8 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 
-// ─────────────────────────────────────────────
-// CONFIG
-// ─────────────────────────────────────────────
-const API_KEY = 'f933cff296149f7459a50c0384cada32';
+
+const veryweirdscr = 'f933cff296149f7459a50c0384cada32';
 const PROVIDERS = [
   { id: 8, name: 'Netflix' },
   { id: 9, name: 'Amazon' },
@@ -33,44 +31,111 @@ const PROVIDERS = [
   { id: 2, name: 'Apple TV' },
 ];
 
-// ─────────────────────────────────────────────
-// THEME – Popcorno (orange/black like PH)
-// ─────────────────────────────────────────────
-const theme = extendTheme({
+export const theme = extendTheme({
+  defaultMode: 'dark',
   colorSchemes: {
     light: {
       palette: {
         primary: {
-          solidBg: '#ff9900',
-          solidHoverBg: '#e68900',
-          plainColor: '#ff9900',
+          solidBg: '#FF9900',
+          solidHoverBg: '#E68700',
+          solidActiveBg: '#CC7800',
+          plainColor: '#FF9900',
+          outlinedColor: '#FF9900',
+          outlinedBorder: '#FF9900',
         },
-        neutral: { solidBg: '#1a1a1a' },
-        background: { body: '#000000' },
-        text: { primary: '#ffffff' },
+        background: { body: '#000', surface: '#111' },
+        text: { primary: '#fff', secondary: 'rgba(255,255,255,0.85)' },
+      },
+    },
+    dark: {
+      palette: {
+        primary: {
+          solidBg: '#FF9900',
+          solidHoverBg: '#E68700',
+          solidActiveBg: '#CC7800',
+          plainColor: '#FF9900',
+          outlinedColor: '#FF9900',
+          outlinedBorder: '#FF9900',
+        },
+        neutral: {
+          solidBg: '#0D0D0D',
+          softBg: '#1A1A1A',
+          softHoverBg: '#222',
+          outlinedBorder: 'rgba(255,255,255,0.18)',
+          plainHoverBg: 'rgba(255,255,255,0.1)',
+        },
+        background: { body: '#000', surface: '#111', popup: '#141414' },
+        text: {
+          primary: '#FFF',
+          secondary: 'rgba(255,255,255,0.85)',
+          tertiary: 'rgba(255,255,255,0.65)',
+        },
       },
     },
   },
+
   fontFamily: {
-    body: 'Poppins, Segoe UI, Inter, system-ui, Avenir, Helvetica, Arial, sans-serif',
+    body: 'Poppins, Inter, Segoe UI, system-ui, sans-serif',
   },
+
   components: {
+    JoyButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 999,
+          fontWeight: 700,
+          textTransform: 'uppercase',
+        },
+        solid: {
+          backgroundColor: '#FF9900',
+          color: '#000',
+          '&:hover': { backgroundColor: '#E68700' },
+        },
+        plain: {
+          color: '#FFF',
+          '&:hover': { backgroundColor: 'rgba(255,153,0,0.12)' },
+        },
+        outlined: {
+          borderColor: '#FF9900',
+          color: '#FF9900',
+          '&:hover': { backgroundColor: 'rgba(255,153,0,0.15)' },
+        },
+      },
+    },
+
+    JoyChip: {
+      styleOverrides: {
+        root: { borderRadius: 999, fontWeight: 600 },
+        outlined: {
+          borderColor: 'rgba(255,255,255,0.25)',
+          color: '#fff',
+          '&:hover': {
+            borderColor: '#FF9900',
+            color: '#FF9900',
+            backgroundColor: 'rgba(255,153,0,0.1)',
+          },
+        },
+        solid: {
+          backgroundColor: '#FF9900',
+          color: '#000',
+          '&:hover': { backgroundColor: '#E68700' },
+        },
+      },
+    },
+
     JoyCard: {
       styleOverrides: {
         root: {
           borderRadius: 16,
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          backgroundColor: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.12)',
         },
       },
     },
-    JoyButton: { styleOverrides: { root: { borderRadius: 999 } } },
   },
 });
 
-// ─────────────────────────────────────────────
-// LOCAL STORAGE UTILITIES
-// ─────────────────────────────────────────────
 const LS = {
   get(key, fallback) {
     try {
@@ -84,7 +149,7 @@ const LS = {
     try {
       localStorage.setItem(key, JSON.stringify(value));
     } catch {
-      // ignore errors
+     
     }
   },
 };
@@ -284,7 +349,7 @@ export default function App() {
 
   // fetch TMDb genres
   useEffect(() => {
-    fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${API_KEY}&language=pl-PL`)
+    fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${veryweirdscr}&language=pl-PL`)
       .then((r) => r.json())
       .then((data) => {
         const map = {};
@@ -328,7 +393,7 @@ export default function App() {
             for (let p = 1; p <= 3; p++) {
               let url =
                 `https://api.themoviedb.org/3/discover/movie?` +
-                `api_key=${API_KEY}&language=pl-PL&include_adult=false` +
+                `api_key=${veryweirdscr}&language=pl-PL&include_adult=false` +
                 `&sort_by=popularity.desc&with_genres=${gid}` +
                 `&with_watch_providers=${providerParam}` +
                 `&page=${p}`;
@@ -383,7 +448,7 @@ export default function App() {
       return;
     }
     setTrailer(null);
-    fetch(`https://api.themoviedb.org/3/movie/${cm.id}/videos?api_key=${API_KEY}&language=pl-PL`)
+    fetch(`https://api.themoviedb.org/3/movie/${cm.id}/videos?api_key=${veryweirdscr}&language=pl-PL`)
       .then((r) => r.json())
       .then((d) => {
         const t = (d.results || []).find((v) => v.type === 'Trailer' && v.site === 'YouTube');
@@ -400,7 +465,7 @@ export default function App() {
     }
     Promise.all(
       likedIds.map((id) =>
-        fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&language=pl-PL`)
+        fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${veryweirdscr}&language=pl-PL`)
           .then((r) => r.json())
           .catch(() => null)
       )
@@ -413,16 +478,30 @@ export default function App() {
   const currentMovie = moviePool[poolIndex];
   const renderGenres = (ids) => ids?.map((id) => genres[id]).filter(Boolean).join(', ');
 
-  const resetGame = () => {
-    setFavorites([]);
-    setFinals([]);
-    setTrailer(null);
-    setUseTrailer(false);
-    setNoResults(false);
-    setPage(getRandomPage());
-    setMoviePool([]);
-    setPoolIndex(0);
-  };
+ const resetGame = ({
+  keepPrefs = true,   // zostaw wybrane gatunki / platformy
+  keepLikes = true,   // zostaw lokalne ❤️
+} = {}) => {
+  setFavorites([]);
+  setFinals([]);
+  setTrailer(null);
+  setUseTrailer(false);
+  setNoResults(false);
+  setPage(getRandomPage());
+  setMoviePool([]);
+  setPoolIndex(0);
+
+  // nowa gra nie powinna pamiętać „👎”
+  setDislikedIds([]);
+
+  if (!keepPrefs) {
+    setSelectedGenres([]);
+    setSelectedProviders([]);
+  }
+  if (!keepLikes) {
+    setLikedIds([]);
+  }
+};
 
   const handleNext = (liked) => {
     if (!isPoolReady) return;
@@ -450,7 +529,7 @@ export default function App() {
           const recArrays = await Promise.all(
             newFavs.map((f) =>
               fetch(
-                `https://api.themoviedb.org/3/movie/${f.id}/recommendations?api_key=${API_KEY}&language=pl-PL`
+                `https://api.themoviedb.org/3/movie/${f.id}/recommendations?api_key=${veryweirdscr}&language=pl-PL`
               )
                 .then((r) => r.json())
                 .then((d) => d.results || [])
@@ -521,18 +600,18 @@ export default function App() {
         if (dbQuery.trim().length > 0) {
           // search by title
           url =
-            `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}` +
+            `https://api.themoviedb.org/3/search/movie?api_key=${veryweirdscr}` +
             `&language=pl-PL&query=${encodeURIComponent(dbQuery)}&page=${dbPage}`;
         } else if (dbSelectedGenres.length > 0) {
           // discover by genres
           const genreParam = dbSelectedGenres.join(',');
           url =
-            `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}` +
+            `https://api.themoviedb.org/3/discover/movie?api_key=${veryweirdscr}` +
             `&language=pl-PL&with_genres=${genreParam}&sort_by=popularity.desc&page=${dbPage}`;
         } else {
           // popular fallback
           url =
-            `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}` +
+            `https://api.themoviedb.org/3/movie/popular?api_key=${veryweirdscr}` +
             `&language=pl-PL&page=${dbPage}`;
         }
 
@@ -582,55 +661,73 @@ export default function App() {
         }}
       >
         {/* HEADER */}
-        <Box
-          sx={{
-            width: '100%',
-            maxWidth: 900,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            mb: 2,
-          }}
-        >
-          <Typography
-            level="h3"
-            sx={{
-              fontWeight: 800,
-              color: '#ff9900',
-              letterSpacing: -0.5,
-              fontSize: { xs: '1.8rem', sm: '2.4rem' },
-            }}
-          >
-            🍿 Popcorno
-          </Typography>
+<Box
+  sx={{
+    width: '100%',
+    maxWidth: 900,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    mb: 2,
+  }}
+>
+  {/* lewa strona: logo + tytuł */}
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+    <Box
+  component="img"
+  src="/logo.png"
+  alt="Popcorno"
+  loading="lazy"
+  onClick={() => {
+    resetGame();     // czyści bieżącą grę
+    setScreen('home'); // przenosi na stronę główną
+  }}
+  sx={{
+    width: 150,
+    height: 150,
+    objectFit: 'contain',
+    borderRadius: 1,
+    cursor: 'pointer',          // dodajemy "rączkę" przy hoverze
+    transition: 'transform 0.2s ease',
+    '&:hover': {
+      transform: 'scale(1.05)', // delikatne powiększenie przy hoverze
+    },
+  }}
+/>
 
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              size="sm"
-              variant={screen === 'home' ? 'solid' : 'plain'}
-              color="primary"
-              onClick={() => setScreen('home')}
-            >
-              Start
-            </Button>
-            <Button
-              size="sm"
-              variant={screen === 'database' ? 'solid' : 'plain'}
-              color="primary"
-              onClick={() => setScreen('database')}
-            >
-              Katalog
-            </Button>
-            <Button
-              size="sm"
-              variant={screen === 'likes' ? 'solid' : 'plain'}
-              color="primary"
-              onClick={() => setScreen('likes')}
-            >
-              Ulubione
-            </Button>
-          </Box>
-        </Box>
+  </Box>
+
+  {/* prawa strona: przyciski */}
+  <Box sx={{ display: 'flex', gap: 1 }}>
+    <Button
+      size="sm"
+      variant={screen === 'home' ? 'solid' : 'plain'}
+      color="primary"
+      onClick={() => {
+        resetGame();
+        setScreen('home');
+      }}
+    >
+      Start
+    </Button>
+    <Button
+      size="sm"
+      variant={screen === 'database' ? 'solid' : 'plain'}
+      color="primary"
+      onClick={() => setScreen('database')}
+    >
+      Katalog
+    </Button>
+    <Button
+      size="sm"
+      variant={screen === 'likes' ? 'solid' : 'plain'}
+      color="primary"
+      onClick={() => setScreen('likes')}
+    >
+      Ulubione
+    </Button>
+  </Box>
+</Box>
 
         {/* SNACKBAR */}
         <Snackbar
@@ -740,22 +837,19 @@ export default function App() {
               </Box>
 
               <Button
-                size="lg"
-                color="primary"
-                onClick={() => {
-                  if (!selectedGenres.length) {
-                    setSnack({
-                      open: true,
-                      message: 'Wybierz chociaż jeden gatunek!',
-                      variant: 'danger',
-                    });
-                    return;
-                  }
-                  setScreen('game');
-                }}
-              >
-                🎥 Zaczynamy
-              </Button>
+  size="lg"
+  color="primary"
+  onClick={() => {
+    if (!selectedGenres.length) {
+      setSnack({ open: true, message: 'Wybierz chociaż jeden gatunek!', variant: 'danger' });
+      return;
+    }
+    resetGame();       // <— to robi „od początku”
+    setScreen('game');
+  }}
+>
+  🎥 Zaczynamy
+</Button>
             </>
           )}
 

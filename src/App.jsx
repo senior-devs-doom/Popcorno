@@ -20,7 +20,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-
+ 
 
 const veryweirdscr = 'f933cff296149f7459a50c0384cada32';
 const PROVIDERS = [

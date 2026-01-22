@@ -20,7 +20,67 @@ import SearchIcon from '@mui/icons-material/Search';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import FavoriteIcon from '@mui/icons-material/Favorite';
- 
+
+export function useSwipeRail({
+  threshold = 120,
+  maxAngle = 12,
+  onLeft,
+  onRight,
+}) {
+  const ref = useRef(null)
+
+  let startX = 0
+  let currentX = 0
+  let active = false
+
+  const onPointerDown = (e) => {
+    startX = e.clientX
+    active = true
+    ref.current?.setPointerCapture(e.pointerId)
+  }
+
+  const onPointerMove = (e) => {
+    if (!active || !ref.current) return
+
+    currentX = e.clientX - startX
+    const progress = currentX / threshold
+    const angle = Math.max(-1, Math.min(1, progress)) * maxAngle
+    const yOffset = Math.abs(currentX) * 0.08;
+
+    ref.current.style.transform = `
+      translate(${currentX}px, ${yOffset}px)
+      rotate(${angle}deg)
+    `;
+  }
+
+  const onPointerUp = () => {
+    if (!active || !ref.current) return
+    active = false
+
+    if (currentX > threshold) onRight?.()
+    else if (currentX < -threshold) onLeft?.()
+
+    // snap back
+    ref.current.style.transition = 'transform 200ms ease'
+    ref.current.style.transform = 'translateX(0) rotate(0deg)'
+
+    setTimeout(() => {
+      if (ref.current) ref.current.style.transition = ''
+    }, 200)
+
+    currentX = 0
+  }
+
+  return {
+    ref,
+    handlers: {
+      onPointerDown,
+      onPointerMove,
+      onPointerUp,
+      onPointerCancel: onPointerUp,
+    },
+  }
+}
 
 const veryweirdscr = 'f933cff296149f7459a50c0384cada32';
 const PROVIDERS = [
@@ -165,9 +225,19 @@ const LS_KEYS = {
 // ─────────────────────────────────────────────
 // MEDIA CONTAINER (Poster/Trailer)
 // ─────────────────────────────────────────────
-function MediaContainer({ useTrailer, trailerKey, posterPath }) {
+function MediaContainer({
+  useTrailer,
+  trailerKey,
+  posterPath,
+  onSwipeLeft,
+  onSwipeRight,
+}) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const imgRef = useRef(null);
+  const swipe = useSwipeRail({
+  onLeft: onSwipeLeft,
+  onRight: onSwipeRight,
+});
 
   useEffect(() => setImgLoaded(false), [posterPath, useTrailer, trailerKey]);
   useEffect(() => {
@@ -176,6 +246,8 @@ function MediaContainer({ useTrailer, trailerKey, posterPath }) {
 
   return (
     <Box
+      ref={swipe.ref}
+      {...swipe.handlers}
       sx={{
         width: '100%',
         height: '60vh',
@@ -185,6 +257,11 @@ function MediaContainer({ useTrailer, trailerKey, posterPath }) {
         overflow: 'hidden',
         background: useTrailer ? '#000' : 'transparent',
         mb: 2,
+
+        touchAction: 'none',
+        cursor: 'grab',
+        userSelect: 'none',
+        willChange: 'transform',
       }}
     >
       {useTrailer && trailerKey ? (
@@ -231,6 +308,7 @@ function MediaContainer({ useTrailer, trailerKey, posterPath }) {
                 objectFit: 'contain',
                 opacity: imgLoaded ? 1 : 0,
                 transition: 'opacity .25s ease',
+                pointerEvents: 'none',
               }}
             />
           )}
@@ -937,6 +1015,8 @@ export default function App() {
                             useTrailer={useTrailer}
                             trailerKey={trailer}
                             posterPath={m?.poster_path}
+                            onSwipeLeft={() => handleNext(false)}
+                            onSwipeRight={() => handleNext(true)}
                           />
 
                           {m && likedIds.includes(m.id) && (
@@ -1142,7 +1222,7 @@ export default function App() {
                           alt={movie.title}
                           sx={{ width: '100%', height: 420, objectFit: 'cover', bgcolor: '#111' }}
                         />
-                        <CardContent sx={{ p: 2 }}>
+                        <CardContent sx={{ p: 2,color: '#C0C0C0', }}>
                           <Typography level="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
                             {movie.title}
                           </Typography>
@@ -1239,7 +1319,7 @@ export default function App() {
                         alt={m.title}
                         sx={{ width: '100%', height: 420, objectFit: 'cover', bgcolor: '#111' }}
                       />
-                      <CardContent sx={{ p: 2 }}>
+                      <CardContent sx={{ p: 2 ,color: '#C0C0C0',}}>
                         <Typography level="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
                           {m.title}
                         </Typography>
@@ -1318,7 +1398,7 @@ export default function App() {
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                       </Box>
-                      <CardContent sx={{ p: 2 }}>
+                      <CardContent sx={{ p: 2 ,color: '#C0C0C0',}}>
                         <Typography level="h5" sx={{ mb: 0.5, fontWeight: 700 }}>
                           {f.title}
                         </Typography>

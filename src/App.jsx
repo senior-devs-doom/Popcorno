@@ -17,6 +17,8 @@ import GameScreen from './screens/GameScreen';
 import DatabaseScreen from './screens/DatabaseScreen';
 import LikesScreen from './screens/LikesScreen';
 import FinalScreen from './screens/FinalScreen';
+import AboutScreen from './screens/AboutScreen';
+
 
 // ─────────────────────────────────────────────
 // APP
@@ -372,6 +374,12 @@ export default function App() {
           px: { xs: 2, sm: 4 },
           py: 3,
           overflowX: 'hidden',
+          // 🎬 CINEMA GLOW (black + orange)
+          background: `
+            radial-gradient(900px 520px at 50% 16%, rgba(255,153,0,0.18), transparent 58%),
+            radial-gradient(700px 460px at 20% 82%, rgba(255,153,0,0.10), transparent 60%),
+            linear-gradient(180deg, #050505 0%, #000 55%, #050505 100%)
+    `,
         }}
       >
 <Header screen={screen} setScreen={setScreen} resetGame={resetGame} />
@@ -395,6 +403,52 @@ export default function App() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+
+            // 🍿 "screen" / glass panel
+            mt: { xs: 2, sm: 5 },
+            mb: { xs: 3, sm: 6 },
+            p: { xs: 2, sm: 3.5 },
+            borderRadius: 24,
+            bgcolor: 'rgba(17,17,17,0.55)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(10px)',
+            // tło: kino + lekkie przejście
+            bgcolor: 'rgba(17,17,17,0.55)',
+            backgroundImage:
+              'radial-gradient(800px 320px at 50% -10%, rgba(255,153,0,0.12), transparent 60%),' +
+              'radial-gradient(600px 260px at 90% 0%, rgba(255,153,0,0.08), transparent 55%),' +
+              'linear-gradient(180deg, rgba(20,20,20,0.70), rgba(12,12,12,0.55))',
+             // obwódka: delikatny "neon" + neutral
+              border: '1px solid rgba(255,255,255,0.08)',
+              boxShadow:
+                '0 20px 60px rgba(0,0,0,0.60),' +
+                '0 0 0 1px rgba(255,153,0,0.18) inset,' +
+                '0 0 45px rgba(255,153,0,0.10)',
+
+              backdropFilter: 'blur(10px)',
+
+              // film grain overlay
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                inset: 0,
+                pointerEvents: 'none',
+                opacity: 0.10,
+                mixBlendMode: 'overlay',
+                backgroundImage:
+                'url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2790%27 height=%2790%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%272%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%2790%27 height=%2790%27 filter=%27url(%23n)%27 opacity=%270.35%27/%3E%3C/svg%3E")',
+
+                // delikatna winieta
+                '&::after': {
+                content: '""',
+                position: 'absolute',
+                inset: -2,
+                pointerEvents: 'none',
+                background:
+                  'radial-gradient(70% 55% at 50% 35%, transparent 55%, rgba(0,0,0,0.55) 100%)',
+    },
+    },
           }}
         >
           {screen === 'home' && (
@@ -463,8 +517,13 @@ export default function App() {
               setScreen={setScreen}
             />
           )}
+          {screen === 'about' && (
+            <AboutScreen 
+            />
+          )}
 
-          <Footer />
+
+          <Footer setScreen={setScreen} />
         </Box>
       </Sheet>
     </CssVarsProvider>

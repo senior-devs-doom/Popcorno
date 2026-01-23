@@ -75,7 +75,12 @@ export const theme = extendTheme({
 
     JoyChip: {
       styleOverrides: {
-        root: { borderRadius: 999, fontWeight: 600 },
+        root: { 
+          borderRadius: 999, 
+          fontWeight: 600, 
+          paddingInline: 12, 
+          height: 34,
+        },
         outlined: {
           borderColor: 'rgba(255,255,255,0.25)',
           color: '#fff',

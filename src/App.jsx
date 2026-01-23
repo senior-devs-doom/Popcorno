@@ -20,367 +20,17 @@ import SearchIcon from '@mui/icons-material/Search';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import MediaContainer from './components/MediaContainer';
+import FavoritesCarousel from './components/FavoritesCarousel';
 
-export function useSwipeRail({
-  threshold = 120,
-  maxAngle = 12,
-  onLeft,
-  onRight,
-}) {
-  const ref = useRef(null)
+import { TMDB_API_KEY } from './constants/tmdb';
+import { PROVIDERS } from './constants/providers';
+import { theme } from './theme/theme';
+import { LS } from './utils/localStorage';
+import { LS_KEYS } from './constants/lsKeys';
+import Header from './components/Header';
+import Footer from './components/Footer';
 
-  let startX = 0
-  let currentX = 0
-  let active = false
-
-  const onPointerDown = (e) => {
-    startX = e.clientX
-    active = true
-    ref.current?.setPointerCapture(e.pointerId)
-  }
-
-  const onPointerMove = (e) => {
-    if (!active || !ref.current) return
-
-    currentX = e.clientX - startX
-    const progress = currentX / threshold
-    const angle = Math.max(-1, Math.min(1, progress)) * maxAngle
-    const yOffset = Math.abs(currentX) * 0.08;
-
-    ref.current.style.transform = `
-      translate(${currentX}px, ${yOffset}px)
-      rotate(${angle}deg)
-    `;
-  }
-
-  const onPointerUp = () => {
-    if (!active || !ref.current) return
-    active = false
-
-    if (currentX > threshold) onRight?.()
-    else if (currentX < -threshold) onLeft?.()
-
-    // snap back
-    ref.current.style.transition = 'transform 200ms ease'
-    ref.current.style.transform = 'translateX(0) rotate(0deg)'
-
-    setTimeout(() => {
-      if (ref.current) ref.current.style.transition = ''
-    }, 200)
-
-    currentX = 0
-  }
-
-  return {
-    ref,
-    handlers: {
-      onPointerDown,
-      onPointerMove,
-      onPointerUp,
-      onPointerCancel: onPointerUp,
-    },
-  }
-}
-
-const veryweirdscr = 'f933cff296149f7459a50c0384cada32';
-const PROVIDERS = [
-  { id: 8, name: 'Netflix' },
-  { id: 9, name: 'Amazon' },
-  { id: 384, name: 'HBO Max' },
-  { id: 337, name: 'Disney+' },
-  { id: 2, name: 'Apple TV' },
-];
-
-export const theme = extendTheme({
-  defaultMode: 'dark',
-  colorSchemes: {
-    light: {
-      palette: {
-        primary: {
-          solidBg: '#FF9900',
-          solidHoverBg: '#E68700',
-          solidActiveBg: '#CC7800',
-          plainColor: '#FF9900',
-          outlinedColor: '#FF9900',
-          outlinedBorder: '#FF9900',
-        },
-        background: { body: '#000', surface: '#111' },
-        text: { primary: '#fff', secondary: 'rgba(255,255,255,0.85)' },
-      },
-    },
-    dark: {
-      palette: {
-        primary: {
-          solidBg: '#FF9900',
-          solidHoverBg: '#E68700',
-          solidActiveBg: '#CC7800',
-          plainColor: '#FF9900',
-          outlinedColor: '#FF9900',
-          outlinedBorder: '#FF9900',
-        },
-        neutral: {
-          solidBg: '#0D0D0D',
-          softBg: '#1A1A1A',
-          softHoverBg: '#222',
-          outlinedBorder: 'rgba(255,255,255,0.18)',
-          plainHoverBg: 'rgba(255,255,255,0.1)',
-        },
-        background: { body: '#000', surface: '#111', popup: '#141414' },
-        text: {
-          primary: '#FFF',
-          secondary: 'rgba(255,255,255,0.85)',
-          tertiary: 'rgba(255,255,255,0.65)',
-        },
-      },
-    },
-  },
-
-  fontFamily: {
-    body: 'Poppins, Inter, Segoe UI, system-ui, sans-serif',
-  },
-
-  components: {
-    JoyButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 999,
-          fontWeight: 700,
-          textTransform: 'uppercase',
-        },
-        solid: {
-          backgroundColor: '#FF9900',
-          color: '#000',
-          '&:hover': { backgroundColor: '#E68700' },
-        },
-        plain: {
-          color: '#FFF',
-          '&:hover': { backgroundColor: 'rgba(255,153,0,0.12)' },
-        },
-        outlined: {
-          borderColor: '#FF9900',
-          color: '#FF9900',
-          '&:hover': { backgroundColor: 'rgba(255,153,0,0.15)' },
-        },
-      },
-    },
-
-    JoyChip: {
-      styleOverrides: {
-        root: { borderRadius: 999, fontWeight: 600 },
-        outlined: {
-          borderColor: 'rgba(255,255,255,0.25)',
-          color: '#fff',
-          '&:hover': {
-            borderColor: '#FF9900',
-            color: '#FF9900',
-            backgroundColor: 'rgba(255,153,0,0.1)',
-          },
-        },
-        solid: {
-          backgroundColor: '#FF9900',
-          color: '#000',
-          '&:hover': { backgroundColor: '#E68700' },
-        },
-      },
-    },
-
-    JoyCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 16,
-          backgroundColor: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.12)',
-        },
-      },
-    },
-  },
-});
-
-const LS = {
-  get(key, fallback) {
-    try {
-      const v = localStorage.getItem(key);
-      return v ? JSON.parse(v) : fallback;
-    } catch {
-      return fallback;
-    }
-  },
-  set(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch {
-     
-    }
-  },
-};
-
-const LS_KEYS = {
-  LIKED: 'popcornoLikedMovieIds',
-  FAV_RUNTIME: 'popcornoSessionFavorites',
-  DISLIKED: 'popcornoDisliked',
-  GENRES: 'popcornoGenres',
-  PROVIDERS: 'popcornoProviders',
-};
-
-// ─────────────────────────────────────────────
-// MEDIA CONTAINER (Poster/Trailer)
-// ─────────────────────────────────────────────
-function MediaContainer({
-  useTrailer,
-  trailerKey,
-  posterPath,
-  onSwipeLeft,
-  onSwipeRight,
-}) {
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const imgRef = useRef(null);
-  const swipe = useSwipeRail({
-  onLeft: onSwipeLeft,
-  onRight: onSwipeRight,
-});
-
-  useEffect(() => setImgLoaded(false), [posterPath, useTrailer, trailerKey]);
-  useEffect(() => {
-    if (imgRef.current?.complete) setImgLoaded(true);
-  }, [posterPath, useTrailer, trailerKey]);
-
-  return (
-    <Box
-      ref={swipe.ref}
-      {...swipe.handlers}
-      sx={{
-        width: '100%',
-        height: '60vh',
-        maxHeight: 520,
-        position: 'relative',
-        borderRadius: useTrailer ? '8px' : '20px',
-        overflow: 'hidden',
-        background: useTrailer ? '#000' : 'transparent',
-        mb: 2,
-
-        touchAction: 'none',
-        cursor: 'grab',
-        userSelect: 'none',
-        willChange: 'transform',
-      }}
-    >
-      {useTrailer && trailerKey ? (
-        <iframe
-          title="Trailer"
-          src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&mute=1`}
-          allowFullScreen
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            border: 'none',
-          }}
-        />
-      ) : (
-        <>
-          {posterPath && !imgLoaded && (
-            <Box
-              sx={{
-                position: 'absolute',
-                inset: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'rgba(255,255,255,0.04)',
-              }}
-            >
-              <CircularProgress color="primary" />
-            </Box>
-          )}
-          {posterPath && (
-            <img
-              ref={imgRef}
-              src={`https://image.tmdb.org/t/p/w780${posterPath}`}
-              alt="Poster"
-              onLoad={() => setImgLoaded(true)}
-              onError={() => setImgLoaded(true)}
-              style={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-                opacity: imgLoaded ? 1 : 0,
-                transition: 'opacity .25s ease',
-                pointerEvents: 'none',
-              }}
-            />
-          )}
-        </>
-      )}
-    </Box>
-  );
-}
-
-// ─────────────────────────────────────────────
-// FAVORITES CAROUSEL
-// ─────────────────────────────────────────────
-function FavoritesCarousel({ favorites }) {
-  const containerRef = useRef(null);
-  const scroll = (d) =>
-    containerRef.current?.scrollBy({
-      left: d * (containerRef.current.offsetWidth || 320),
-      behavior: 'smooth',
-    });
-
-  return (
-    <Box sx={{ position: 'relative', my: 2 }}>
-      <IconButton
-        onClick={() => scroll(-1)}
-        sx={{ position: 'absolute', top: '50%', left: 0, transform: 'translateY(-50%)', zIndex: 1 }}
-      >
-        <ChevronLeftIcon sx={{ color: '#fff' }} />
-      </IconButton>
-
-      <Box
-        ref={containerRef}
-        sx={{
-          display: 'flex',
-          overflowX: 'auto',
-          scrollSnapType: 'x mandatory',
-          '&::-webkit-scrollbar': { display: 'none' },
-          gap: 2,
-          p: 1,
-        }}
-      >
-        {favorites.map((f) => (
-          <Card
-            key={f.id}
-            sx={{
-              flex: { xs: '0 0 80%', md: '0 0 auto' },
-              scrollSnapAlign: 'center',
-              background: 'rgba(255,255,255,0.04)',
-            }}
-          >
-            <Box sx={{ width: '100%', height: { xs: '20vh', sm: '6rem' }, overflow: 'hidden', borderRadius: 1 }}>
-              <img
-                src={`https://image.tmdb.org/t/p/w500${f.poster_path}`}
-                alt={f.title}
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              />
-            </Box>
-            <Typography level="body2" sx={{ color: 'white', textAlign: 'center', mt: 1 }}>
-              {f.title}
-            </Typography>
-          </Card>
-        ))}
-      </Box>
-
-      <IconButton
-        onClick={() => scroll(1)}
-        sx={{ position: 'absolute', top: '50%', right: 0, transform: 'translateY(-50%)', zIndex: 1 }}
-      >
-        <ChevronRightIcon sx={{ color: '#fff' }} />
-      </IconButton>
-    </Box>
-  );
-}
 
 // ─────────────────────────────────────────────
 // APP
@@ -427,7 +77,7 @@ export default function App() {
 
   // fetch TMDb genres
   useEffect(() => {
-    fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${veryweirdscr}&language=pl-PL`)
+    fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_API_KEY}&language=pl-PL`)
       .then((r) => r.json())
       .then((data) => {
         const map = {};
@@ -471,7 +121,7 @@ export default function App() {
             for (let p = 1; p <= 3; p++) {
               let url =
                 `https://api.themoviedb.org/3/discover/movie?` +
-                `api_key=${veryweirdscr}&language=pl-PL&include_adult=false` +
+                `api_key=${TMDB_API_KEY}&language=pl-PL&include_adult=false` +
                 `&sort_by=popularity.desc&with_genres=${gid}` +
                 `&with_watch_providers=${providerParam}` +
                 `&page=${p}`;
@@ -526,7 +176,7 @@ export default function App() {
       return;
     }
     setTrailer(null);
-    fetch(`https://api.themoviedb.org/3/movie/${cm.id}/videos?api_key=${veryweirdscr}&language=pl-PL`)
+    fetch(`https://api.themoviedb.org/3/movie/${cm.id}/videos?api_key=${TMDB_API_KEY}&language=pl-PL`)
       .then((r) => r.json())
       .then((d) => {
         const t = (d.results || []).find((v) => v.type === 'Trailer' && v.site === 'YouTube');
@@ -543,7 +193,7 @@ export default function App() {
     }
     Promise.all(
       likedIds.map((id) =>
-        fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${veryweirdscr}&language=pl-PL`)
+        fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_API_KEY}&language=pl-PL`)
           .then((r) => r.json())
           .catch(() => null)
       )
@@ -607,7 +257,7 @@ export default function App() {
           const recArrays = await Promise.all(
             newFavs.map((f) =>
               fetch(
-                `https://api.themoviedb.org/3/movie/${f.id}/recommendations?api_key=${veryweirdscr}&language=pl-PL`
+                `https://api.themoviedb.org/3/movie/${f.id}/recommendations?api_key=${TMDB_API_KEY}&language=pl-PL`
               )
                 .then((r) => r.json())
                 .then((d) => d.results || [])
@@ -678,18 +328,18 @@ export default function App() {
         if (dbQuery.trim().length > 0) {
           // search by title
           url =
-            `https://api.themoviedb.org/3/search/movie?api_key=${veryweirdscr}` +
+            `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}` +
             `&language=pl-PL&query=${encodeURIComponent(dbQuery)}&page=${dbPage}`;
         } else if (dbSelectedGenres.length > 0) {
           // discover by genres
           const genreParam = dbSelectedGenres.join(',');
           url =
-            `https://api.themoviedb.org/3/discover/movie?api_key=${veryweirdscr}` +
+            `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}` +
             `&language=pl-PL&with_genres=${genreParam}&sort_by=popularity.desc&page=${dbPage}`;
         } else {
           // popular fallback
           url =
-            `https://api.themoviedb.org/3/movie/popular?api_key=${veryweirdscr}` +
+            `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}` +
             `&language=pl-PL&page=${dbPage}`;
         }
 
@@ -738,74 +388,7 @@ export default function App() {
           overflowX: 'hidden',
         }}
       >
-        {/* HEADER */}
-<Box
-  sx={{
-    width: '100%',
-    maxWidth: 900,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    mb: 2,
-  }}
->
-  {/* lewa strona: logo + tytuł */}
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-    <Box
-  component="img"
-  src="/logo.png"
-  alt="Popcorno"
-  loading="lazy"
-  onClick={() => {
-    resetGame();     // czyści bieżącą grę
-    setScreen('home'); // przenosi na stronę główną
-  }}
-  sx={{
-    width: 150,
-    height: 150,
-    objectFit: 'contain',
-    borderRadius: 1,
-    cursor: 'pointer',          // dodajemy "rączkę" przy hoverze
-    transition: 'transform 0.2s ease',
-    '&:hover': {
-      transform: 'scale(1.05)', // delikatne powiększenie przy hoverze
-    },
-  }}
-/>
-
-  </Box>
-
-  {/* prawa strona: przyciski */}
-  <Box sx={{ display: 'flex', gap: 1 }}>
-    <Button
-      size="sm"
-      variant={screen === 'home' ? 'solid' : 'plain'}
-      color="primary"
-      onClick={() => {
-        resetGame();
-        setScreen('home');
-      }}
-    >
-      Start
-    </Button>
-    <Button
-      size="sm"
-      variant={screen === 'database' ? 'solid' : 'plain'}
-      color="primary"
-      onClick={() => setScreen('database')}
-    >
-      Katalog
-    </Button>
-    <Button
-      size="sm"
-      variant={screen === 'likes' ? 'solid' : 'plain'}
-      color="primary"
-      onClick={() => setScreen('likes')}
-    >
-      Ulubione
-    </Button>
-  </Box>
-</Box>
+<Header screen={screen} setScreen={setScreen} resetGame={resetGame} />
 
         {/* SNACKBAR */}
         <Snackbar
@@ -1480,57 +1063,7 @@ export default function App() {
               )}
             </Box>
           )}
-
-          {/* FOOTER */}
-          <Box
-            component="footer"
-            sx={{
-              width: '100%',
-              maxWidth: 900,
-              mt: 'auto',
-              py: 4,
-              color: 'rgba(255,255,255,0.8)',
-            }}
-          >
-            <Box
-              sx={{
-                display: { xs: 'block', md: 'flex' },
-                justifyContent: 'space-between',
-                gap: 4,
-                mb: 2,
-              }}
-            >
-              <Box>
-                <Typography level="h5" sx={{ color: '#ff9900', mb: 1, fontWeight: 800 }}>
-                  Popcorno
-                </Typography>
-                <Typography level="body2" sx={{ lineHeight: 1.8 }}>
-                  O projekcie<br />
-                  Korzystamy z TMDb API<br />
-                </Typography>
-              </Box>
-
-              <Box>
-                <Typography level="h6" sx={{ color: '#ff9900', mb: 1 }}>
-                  Pomoc
-                </Typography>
-                <Typography level="body2" sx={{ lineHeight: 1.8 }}>
-                  FAQ<br />
-                  Prywatność i cookies<br />
-                  Kontakt
-                </Typography>
-              </Box>
-
-            
-            </Box>
-
-            <Typography
-              level="body3"
-              sx={{ textAlign: 'center', color: 'rgba(255,255,255,0.6)' }}
-            >
-              © {new Date().getFullYear()} Popcorno. Wszelkie prawa zastrzeżone.
-            </Typography>
-          </Box>
+<Footer />
         </Box>
       </Sheet>
     </CssVarsProvider>

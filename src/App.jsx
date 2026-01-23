@@ -1,36 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { CssVarsProvider, extendTheme } from '@mui/joy/styles';
+import { CssVarsProvider } from '@mui/joy/styles';
 import Sheet from '@mui/joy/Sheet';
-import Typography from '@mui/joy/Typography';
-import Button from '@mui/joy/Button';
-import Card from '@mui/joy/Card';
-import CardContent from '@mui/joy/CardContent';
 import Box from '@mui/joy/Box';
-import Checkbox from '@mui/joy/Checkbox';
-import IconButton from '@mui/joy/IconButton';
-import CircularProgress from '@mui/joy/CircularProgress';
-import Switch from '@mui/joy/Switch';
-import FormControl from '@mui/joy/FormControl';
-import FormLabel from '@mui/joy/FormLabel';
 import Snackbar from '@mui/joy/Snackbar';
-import Alert from '@mui/joy/Alert';
-import Chip from '@mui/joy/Chip';
-import Input from '@mui/joy/Input';
-import SearchIcon from '@mui/icons-material/Search';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import MediaContainer from './components/MediaContainer';
-import FavoritesCarousel from './components/FavoritesCarousel';
 
 import { TMDB_API_KEY } from './constants/tmdb';
-import { PROVIDERS } from './constants/providers';
 import { theme } from './theme/theme';
 import { LS } from './utils/localStorage';
 import { LS_KEYS } from './constants/lsKeys';
+
 import Header from './components/Header';
 import Footer from './components/Footer';
 
+import HomeScreen from './screens/HomeScreen';
+import GameScreen from './screens/GameScreen';
+import DatabaseScreen from './screens/DatabaseScreen';
+import LikesScreen from './screens/LikesScreen';
+import FinalScreen from './screens/FinalScreen';
 
 // ─────────────────────────────────────────────
 // APP
@@ -412,662 +398,75 @@ export default function App() {
           }}
         >
           {screen === 'home' && (
-            <>
-              <Typography
-                level="h2"
-                sx={{
-                  fontWeight: 700,
-                  color: '#ff9900',
-                  textAlign: 'center',
-                  mb: 2,
-                }}
-              >
-                Wybierz, co lubisz oglądać
-              </Typography>
-              <Typography level="body1" sx={{ mb: 2, textAlign: 'center', opacity: 0.7 }}>
-                Zaznacz ulubione gatunki i platformy, a potem ruszaj do wyboru filmu 🎬
-              </Typography>
-
-              <Box sx={{ width: '100%', mb: 2, position: 'relative' }}>
-                <IconButton
-                  onClick={() => scrollGenres(-1)}
-                  sx={{ position: 'absolute', left: -10, top: '40%', zIndex: 1 }}
-                >
-                  <ChevronLeftIcon sx={{ color: '#fff' }} />
-                </IconButton>
-
-                <Box
-                  ref={genreRef}
-                  sx={{
-                    display: 'flex',
-                    gap: 1,
-                    overflowX: 'auto',
-                    scrollSnapType: 'x mandatory',
-                    '&::-webkit-scrollbar': { display: 'none' },
-                    px: 5,
-                    py: 1,
-                  }}
-                >
-                  {dbGenresList.map((g) => (
-                    <Chip
-                      key={g.id}
-                      variant={selectedGenres.includes(g.id) ? 'solid' : 'outlined'}
-                      color="primary"
-                      onClick={() =>
-                        setSelectedGenres((prev) =>
-                          prev.includes(g.id)
-                            ? prev.filter((x) => x !== g.id)
-                            : [...prev, g.id]
-                        )
-                      }
-                    >
-                      {g.name}
-                    </Chip>
-                  ))}
-                </Box>
-
-                <IconButton
-                  onClick={() => scrollGenres(1)}
-                  sx={{ position: 'absolute', right: -10, top: '40%', zIndex: 1 }}
-                >
-                  <ChevronRightIcon sx={{ color: '#fff' }} />
-                </IconButton>
-              </Box>
-
-              <Typography level="body2" sx={{ mb: 1 }}>
-                Dostępne platformy:
-              </Typography>
-
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
-                {PROVIDERS.map((p) => (
-                  <Chip
-                    key={p.id}
-                    variant={selectedProviders.includes(p.id) ? 'solid' : 'outlined'}
-                    color="primary"
-                    onClick={() =>
-                      setSelectedProviders((prev) =>
-                        prev.includes(p.id)
-                          ? prev.filter((x) => x !== p.id)
-                          : [...prev, p.id]
-                      )
-                    }
-                  >
-                    {p.name}
-                  </Chip>
-                ))}
-              </Box>
-
-              <Button
-  size="lg"
-  color="primary"
-  onClick={() => {
-    if (!selectedGenres.length) {
-      setSnack({ open: true, message: 'Wybierz chociaż jeden gatunek!', variant: 'danger' });
-      return;
-    }
-    resetGame();       // <— to robi „od początku”
-    setScreen('game');
-  }}
->
-  🎥 Zaczynamy
-</Button>
-            </>
+            <HomeScreen
+              dbGenresList={dbGenresList}
+              selectedGenres={selectedGenres}
+              setSelectedGenres={setSelectedGenres}
+              selectedProviders={selectedProviders}
+              setSelectedProviders={setSelectedProviders}
+              scrollGenres={scrollGenres}
+              genreRef={genreRef}
+              setSnack={setSnack}
+              resetGame={resetGame}
+              setScreen={setScreen}
+            />
           )}
 
           {screen === 'game' && (
-            <Box sx={{ display: ['block', 'flex'], gap: 2, width: '100%' }}>
-              {/* LEFT: session favorites */}
-              <Box sx={{ width: ['100%', '260px'] }}>
-                <Typography level="h4" sx={{ mb: 1, color: '#ff9900' }}>
-                  Twoje typy
-                </Typography>
-
-                {/* mobile: carousel */}
-                <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
-                  <FavoritesCarousel favorites={favorites} />
-                </Box>
-
-                {/* desktop: grid list */}
-                <Box
-                  sx={{
-                    display: { xs: 'none', sm: 'grid' },
-                    gridTemplateColumns: '1fr',
-                    gap: 2,
-                    overflowY: 'auto',
-                    maxHeight: '60vh',
-                    pr: 1,
-                  }}
-                >
-                  {favorites.map((f) => (
-                    <Card key={f.id} sx={{ background: 'rgba(255,255,255,0.04)' }}>
-                      <Box sx={{ width: '100%', height: '6rem', overflow: 'hidden', borderRadius: 1 }}>
-                        <img
-                          src={`https://image.tmdb.org/t/p/w500${f.poster_path}`}
-                          alt={f.title}
-                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                        />
-                      </Box>
-                      <Typography level="body2" sx={{ color: 'white', textAlign: 'center', mt: 1 }}>
-                        {f.title}
-                      </Typography>
-                    </Card>
-                  ))}
-                </Box>
-              </Box>
-
-              {/* CENTER: current movie card */}
-              <Box
-                sx={{
-                  flexGrow: 1,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  minHeight: '60vh',
-                }}
-              >
-                {!isPoolReady ? (
-                  <CircularProgress color="primary" />
-                ) : moviePool.length === 0 ? (
-                  <Typography level="body1" sx={{ color: 'white', textAlign: 'center' }}>
-                    Brak filmów do wyświetlenia dla wybranych gatunków. Zmień preferencje i spróbuj ponownie.
-                  </Typography>
-                ) : (
-                  (() => {
-                    const m = currentMovie;
-                    return (
-                      <Box sx={{ width: '100%', maxWidth: 560 }}>
-                        {/* trailer toggle */}
-                        <FormControl orientation="horizontal" sx={{ mb: 2, gap: 1, alignItems: 'center' }}>
-                          <FormLabel sx={{ color: 'white' }}>Trailer zamiast plakatu</FormLabel>
-                          <Switch checked={useTrailer} onChange={(e) => setUseTrailer(e.target.checked)} />
-                        </FormControl>
-
-                        <Card
-                          sx={{
-                            position: 'relative',
-                            mx: 'auto',
-                            backgroundColor: 'rgba(255,255,255,0.05)',
-                            border: '1px solid rgba(255,255,255,0.12)',
-                            borderRadius: '20px',
-                            p: 2,
-                            overflow: 'hidden',
-                          }}
-                        >
-                          <MediaContainer
-                            key={m?.id}
-                            useTrailer={useTrailer}
-                            trailerKey={trailer}
-                            posterPath={m?.poster_path}
-                            onSwipeLeft={() => handleNext(false)}
-                            onSwipeRight={() => handleNext(true)}
-                          />
-
-                          {m && likedIds.includes(m.id) && (
-                            <Chip
-                              startDecorator={<FavoriteIcon />}
-                              variant="soft"
-                              color="primary"
-                              size="md"
-                              sx={{
-                                position: 'absolute',
-                                top: 12,
-                                right: 12,
-                                fontWeight: 700,
-                                bgcolor: 'rgba(255,153,0,0.15)',
-                                color: '#ff9900',
-                                border: '1px solid rgba(255,153,0,0.35)',
-                              }}
-                            >
-                              Ulubione
-                            </Chip>
-                          )}
-
-                          <CardContent>
-                            <Typography level="h3" sx={{ mb: 1, fontWeight: 800 }}>
-                              {m?.title}
-                            </Typography>
-                            <Typography level="body2" sx={{ color: 'rgba(255,255,255,0.85)', mb: 1 }}>
-                              Ocena: {m?.vote_average ?? '—'} &middot; {m?.release_date ?? '—'}
-                            </Typography>
-                            <Typography level="body2" sx={{ color: 'rgba(255,255,255,0.7)', mb: 2 }}>
-                              Gatunki: {renderGenres(m?.genre_ids || []) || '—'}
-                            </Typography>
-
-                            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-                              {/* Dislike */}
-                              <Button
-                                size="lg"
-                                variant="solid"
-                                sx={{
-                                  minWidth: 56,
-                                  borderRadius: '999px',
-                                  bgcolor: '#111',
-                                  color: '#fff',
-                                  border: '1px solid rgba(255,255,255,0.15)',
-                                  '&:hover': { bgcolor: '#161616' },
-                                }}
-                                onClick={() => handleNext(false)}
-                              >
-                                👎
-                              </Button>
-
-                              {/* Like (adds to session favorites & drives finals) */}
-                              <Button
-                                size="lg"
-                                color="primary"
-                                variant="solid"
-                                sx={{ minWidth: 56, borderRadius: '999px' }}
-                                onClick={() => handleNext(true)}
-                              >
-                                👍
-                              </Button>
-
-                              {/* Heart (persistent local likes) */}
-                              <Button
-                                size="lg"
-                                variant="solid"
-                                sx={{
-                                  minWidth: 56,
-                                  borderRadius: '999px',
-                                  bgcolor: likedIds.includes(m?.id) ? '#ff9900' : '#222',
-                                  color: likedIds.includes(m?.id) ? '#000' : '#fff',
-                                  border: '1px solid rgba(255,255,255,0.15)',
-                                  '&:hover': { opacity: 0.9 },
-                                }}
-                                onClick={() => m && handleHeart(m)}
-                              >
-                                ❤️
-                              </Button>
-                            </Box>
-                          </CardContent>
-                        </Card>
-                      </Box>
-                    );
-                  })()
-                )}
-              </Box>
-            </Box>
+            <GameScreen
+              favorites={favorites}
+              isPoolReady={isPoolReady}
+              moviePool={moviePool}
+              currentMovie={currentMovie}
+              useTrailer={useTrailer}
+              setUseTrailer={setUseTrailer}
+              trailer={trailer}
+              handleNext={handleNext}
+              likedIds={likedIds}
+              handleHeart={handleHeart}
+              renderGenres={renderGenres}
+            />
           )}
 
           {screen === 'database' && (
-            <Box sx={{ width: '100%', mt: 1 }}>
-              {/* SEARCH BAR */}
-              <Box
-                component="form"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  setDbPage(1);
-                }}
-                sx={{
-                  display: 'flex',
-                  gap: 1,
-                  mb: 2,
-                  width: '100%',
-                }}
-              >
-                <Input
-                  placeholder="Wpisz tytuł filmu…"
-                  value={dbQuery}
-                  onChange={(e) => setDbQuery(e.target.value)}
-                  startDecorator={<SearchIcon sx={{ color: 'rgba(255,255,255,0.7)' }} />}
-                  sx={{
-                    flex: 1,
-                    bgcolor: 'rgba(255,255,255,0.06)',
-                    color: '#fff',
-                    borderRadius: 12,
-                    '--Input-placeholderOpacity': 0.6,
-                    '& input': { color: '#fff' },
-                  }}
-                />
-                <Button color="primary" type="submit" sx={{ px: 3 }}>
-                  Szukaj
-                </Button>
-              </Box>
-
-              {/* GENRE FILTERS */}
-              <Typography level="body2" sx={{ mb: 1, opacity: 0.8 }}>
-                Filtruj po gatunkach (max 3):
-              </Typography>
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: { xs: 'repeat(2,1fr)', sm: 'repeat(4,1fr)', md: 'repeat(6,1fr)' },
-                  gap: 1,
-                  mb: 2,
-                }}
-              >
-                {dbGenresList.map(({ id, name }) => {
-                  const checked = dbSelectedGenres.includes(id);
-                  return (
-                    <Chip
-                      key={id}
-                      variant={checked ? 'solid' : 'outlined'}
-                      color="primary"
-                      onClick={() =>
-                        setDbSelectedGenres((prev) => {
-                          if (prev.includes(id)) return prev.filter((x) => x !== id);
-                          if (prev.length >= 3) return prev;
-                          return [...prev, id];
-                        })
-                      }
-                    >
-                      {name}
-                    </Chip>
-                  );
-                })}
-              </Box>
-
-              {/* RESULTS */}
-              {dbLoading ? (
-                <Box sx={{ py: 6, display: 'flex', justifyContent: 'center' }}>
-                  <CircularProgress color="primary" />
-                </Box>
-              ) : dbError ? (
-                <Alert color="danger" variant="soft" sx={{ my: 2 }}>
-                  {dbError}
-                </Alert>
-              ) : dbResults.length === 0 ? (
-                <Typography level="body1" sx={{ textAlign: 'center', opacity: 0.7, py: 6 }}>
-                  Brak wyników dla podanych kryteriów.
-                </Typography>
-              ) : (
-                <>
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3,1fr)' },
-                      gap: 2,
-                    }}
-                  >
-                    {dbResults.map((movie) => (
-                      <Card
-                        key={movie.id}
-                        variant="outlined"
-                        sx={{
-                          background: 'rgba(255,255,255,0.04)',
-                          border: '1px solid rgba(255,255,255,0.09)',
-                          borderRadius: 16,
-                          overflow: 'hidden',
-                          transition: 'transform .2s, box-shadow .2s',
-                          '&:hover': {
-                            transform: 'translateY(-3px)',
-                            boxShadow: '0 10px 24px rgba(0,0,0,0.45)',
-                          },
-                        }}
-                      >
-                        <Box
-                          component="img"
-                          src={
-                            movie.poster_path
-                              ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
-                              : 'https://via.placeholder.com/342x513?text=Brak+ok%C5%82adki'
-                          }
-                          alt={movie.title}
-                          sx={{ width: '100%', height: 420, objectFit: 'cover', bgcolor: '#111' }}
-                        />
-                        <CardContent sx={{ p: 2,color: '#C0C0C0', }}>
-                          <Typography level="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
-                            {movie.title}
-                          </Typography>
-                          <Typography level="body2" sx={{ opacity: 0.8 }}>
-                            {movie.release_date || '—'} &middot; ⭐ {movie.vote_average ?? '—'}
-                          </Typography>
-                          {Array.isArray(movie.genre_ids) && movie.genre_ids.length > 0 && (
-                            <Typography level="body3" sx={{ opacity: 0.7, mt: 0.5 }}>
-                              {renderGenres(movie.genre_ids)}
-                            </Typography>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </Box>
-
-                  {/* PAGINATION */}
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      gap: 1.5,
-                      mt: 3,
-                    }}
-                  >
-                    <Button
-                      size="md"
-                      variant="plain"
-                      startDecorator={<ChevronLeftIcon />}
-                      disabled={dbPage <= 1}
-                      onClick={() => setDbPage((p) => Math.max(1, p - 1))}
-                    >
-                      Poprzednia
-                    </Button>
-                    <Typography level="body2" sx={{ opacity: 0.8 }}>
-                      Strona {dbPage} z {dbTotalPages}
-                    </Typography>
-                    <Button
-                      size="md"
-                      variant="plain"
-                      endDecorator={<ChevronRightIcon />}
-                      disabled={dbPage >= dbTotalPages}
-                      onClick={() => setDbPage((p) => Math.min(dbTotalPages, p + 1))}
-                    >
-                      Następna
-                    </Button>
-                  </Box>
-                </>
-              )}
-            </Box>
+            <DatabaseScreen
+              dbQuery={dbQuery}
+              setDbQuery={setDbQuery}
+              dbSelectedGenres={dbSelectedGenres}
+              setDbSelectedGenres={setDbSelectedGenres}
+              dbResults={dbResults}
+              dbPage={dbPage}
+              setDbPage={setDbPage}
+              dbTotalPages={dbTotalPages}
+              dbLoading={dbLoading}
+              dbError={dbError}
+              dbGenresList={dbGenresList}
+              renderGenres={renderGenres}
+            />
           )}
 
           {screen === 'likes' && (
-            <Box sx={{ width: '100%' }}>
-              <Typography level="h3" sx={{ mb: 2, color: '#ff9900', fontWeight: 800 }}>
-                Twoje ulubione
-              </Typography>
-
-              {!likedIds.length ? (
-                <Typography level="body1" sx={{ opacity: 0.75 }}>
-                  Jeszcze nic tu nie ma. W trybie <strong>Game</strong> klikaj ❤️, aby dodać film do ulubionych.
-                </Typography>
-              ) : likedDetails.length === 0 ? (
-                <Box sx={{ py: 6, display: 'flex', justifyContent: 'center' }}>
-                  <CircularProgress color="primary" />
-                </Box>
-              ) : (
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3,1fr)' },
-                    gap: 2,
-                  }}
-                >
-                  {likedDetails.map((m) => (
-                    <Card
-                      key={m.id}
-                      sx={{
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.09)',
-                        borderRadius: 16,
-                        overflow: 'hidden',
-                        position: 'relative',
-                      }}
-                    >
-                      <Box
-                        component="img"
-                        src={
-                          m.poster_path
-                            ? `https://image.tmdb.org/t/p/w342${m.poster_path}`
-                            : 'https://via.placeholder.com/342x513?text=Brak+ok%C5%82adki'
-                        }
-                        alt={m.title}
-                        sx={{ width: '100%', height: 420, objectFit: 'cover', bgcolor: '#111' }}
-                      />
-                      <CardContent sx={{ p: 2 ,color: '#C0C0C0',}}>
-                        <Typography level="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
-                          {m.title}
-                        </Typography>
-                        <Typography level="body2" sx={{ opacity: 0.8 }}>
-                          {m.release_date || '—'} &middot; ⭐ {m.vote_average ?? '—'}
-                        </Typography>
-                        {Array.isArray(m.genres) ? (
-                          <Typography level="body3" sx={{ opacity: 0.7, mt: 0.5 }}>
-                            {m.genres.map((g) => g.name).join(', ')}
-                          </Typography>
-                        ) : (
-                          Array.isArray(m.genre_ids) && (
-                            <Typography level="body3" sx={{ opacity: 0.7, mt: 0.5 }}>
-                              {renderGenres(m.genre_ids)}
-                            </Typography>
-                          )
-                        )}
-                        <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end' }}>
-                          <Button
-                            variant="plain"
-                            color="primary"
-                            onClick={() => handleUnlike(m.id)}
-                          >
-                            Usuń z ulubionych
-                          </Button>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </Box>
-              )}
-            </Box>
+            <LikesScreen
+              likedIds={likedIds}
+              likedDetails={likedDetails}
+              handleUnlike={handleUnlike}
+              renderGenres={renderGenres}
+            />
           )}
 
           {screen === 'final' && (
-            <Box sx={{ width: '100%', py: 2 }}>
-              <Typography
-                level="h3"
-                sx={{ textAlign: 'center', mb: 1, color: '#ff9900', fontWeight: 800 }}
-              >
-                Podsumowanie
-              </Typography>
-              <Typography level="body1" sx={{ textAlign: 'center', opacity: 0.8, mb: 3 }}>
-                Na podstawie Twoich wyborów proponujemy te tytuły:
-              </Typography>
-
-              {finals.length === 0 ? (
-                <Typography level="body1" sx={{ textAlign: 'center', opacity: 0.75 }}>
-                  Brak gotowych propozycji. Dodaj przynajmniej 5 „lubię” w trybie gry.
-                </Typography>
-              ) : (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: 2,
-                    justifyContent: 'center',
-                  }}
-                >
-                  {finals.map((f) => (
-                    <Card
-                      key={f.id}
-                      variant="plain"
-                      sx={{
-                        width: 240,
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.09)',
-                        borderRadius: 16,
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <Box sx={{ width: '100%', height: 320, overflow: 'hidden', bgcolor: '#111' }}>
-                        <img
-                          src={`https://image.tmdb.org/t/p/w500${f.poster_path}`}
-                          alt={f.title}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      </Box>
-                      <CardContent sx={{ p: 2 ,color: '#C0C0C0',}}>
-                        <Typography level="h5" sx={{ mb: 0.5, fontWeight: 700 }}>
-                          {f.title}
-                        </Typography>
-                        <Typography level="body2" sx={{ opacity: 0.8, mb: 0.5 }}>
-                          ⭐ {f.vote_average ?? '—'}
-                        </Typography>
-                        <Typography level="body3" sx={{ opacity: 0.7 }}>
-                          {Array.isArray(f.genre_ids) ? renderGenres(f.genre_ids) : '—'}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </Box>
-              )}
-
-              <Box sx={{ mt: 3, display: 'flex', gap: 1, justifyContent: 'center' }}>
-                <Button variant="plain" onClick={() => setScreen('home')}>
-                  Wróć do startu
-                </Button>
-                <Button
-                  color="primary"
-                  onClick={() => {
-                    resetGame();
-                    setScreen('game');
-                  }}
-                >
-                  Zagraj ponownie
-                </Button>
-              </Box>
-
-              {/* Twoje typy (z sesji) */}
-              {favorites.length > 0 && (
-                <>
-                  <Typography
-                    level="h4"
-                    sx={{ mt: 4, mb: 1, textAlign: 'center', color: '#ff9900', fontWeight: 800 }}
-                  >
-                    Twoje typy
-                  </Typography>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: 2,
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {favorites.map((f) => (
-                      <Card
-                        key={f.id}
-                        variant="plain"
-                        sx={{
-                          width: 200,
-                          background: 'rgba(255,255,255,0.04)',
-                          border: '1px solid rgba(255,255,255,0.09)',
-                          borderRadius: 16,
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <Box sx={{ width: '100%', height: 280, overflow: 'hidden', bgcolor: '#111' }}>
-                          <img
-                            src={`https://image.tmdb.org/t/p/w500${f.poster_path}`}
-                            alt={f.title}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          />
-                        </Box>
-                        <CardContent sx={{ p: 2 }}>
-                          <Typography level="h6" sx={{ mb: 0.5, fontWeight: 700 }}>
-                            {f.title}
-                          </Typography>
-                          <Typography level="body3" sx={{ opacity: 0.75 }}>
-                            {renderGenres(f.genre_ids || [])}
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </Box>
-                </>
-              )}
-            </Box>
+            <FinalScreen
+              finals={finals}
+              favorites={favorites}
+              renderGenres={renderGenres}
+              resetGame={resetGame}
+              setScreen={setScreen}
+            />
           )}
-<Footer />
+
+          <Footer />
         </Box>
       </Sheet>
     </CssVarsProvider>
   );
 }
-
-
